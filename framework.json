@@ -1,0 +1,21 @@
+{
+  "name": "zlib",
+  "version": "1.3.2.1",
+  "type": "custom",
+  "description": "A massively spiffy yet delicately unobtrusive compression library.",
+  "publish": {
+    "headers": {
+      "include_dirs": ["."],
+      "patterns": ["zlib.h", "zconf.h"]
+    },
+    "binaries": {
+      "glob": ["libz.*", "libzs.*", "libzd.*", "libzsd.*", "z.*", "zs.*", "zd.*", "zsd.*", "libz.dll.a"],
+      "include_static": true,
+      "include_pdb": false
+    },
+    "extras": [
+      { "from": "${source}/LICENSE", "to": "." }
+    ],
+    "cmake_config": "auto"
+  }
+}
