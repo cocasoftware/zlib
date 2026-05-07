@@ -1,6 +1,27 @@
 # zlib post_build.cmake — COCA framework integration
-# Executed after add_subdirectory(zlib) to fix coverage linking.
+# Executed after add_subdirectory(zlib) to:
+#   (1) provide a uniform `zlib` target for static-only platforms
+#   (2) fix coverage linking on clang-cl + lld-link
+
+# -- (1) Uniform target name -----------------------------------------------
+# Architectural invariant: COCA's auto-generated framework CMakeLists.txt
+# spells dependencies by framework NAME, e.g. ``target_link_libraries(
+# test_zlib PUBLIC catch2 zlib)``.  Upstream zlib only creates the ``zlib``
+# CMake target when ``ZLIB_BUILD_SHARED`` is ON; on static-only platforms
+# (musl, wasm) ``pre_build.cmake`` forces it OFF so only ``zlibstatic``
+# exists.  Without this alias, the consumer's link line silently degrades
+# to a literal ``-lzlib`` flag, dropping zlib's INTERFACE include dirs and
+# breaking the build with ``'zlib.h' file not found``.
 #
+# Synthesise the alias so the framework's public surface (the target named
+# after the framework itself) is identical across every platform — the
+# platform-specific shared-vs-static choice stays an implementation detail
+# of the zlib framework, never leaks to consumers.
+if(TARGET zlibstatic AND NOT TARGET zlib)
+    add_library(zlib ALIAS zlibstatic)
+endif()
+
+# -- (2) Coverage linking fix ----------------------------------------------
 # Problem: zlib's test/CMakeLists.txt adds `-coverage` as a link option for
 # the `infcover` target.  In clang-cl + lld-link mode, `-coverage` is passed
 # directly to lld-link which ignores it (unknown argument warning).  The
